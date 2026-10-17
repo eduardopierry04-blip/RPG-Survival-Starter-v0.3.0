@@ -16,25 +16,26 @@ jobs:
       - name: Baixar arquivos
         uses: actions/checkout@v4
 
-      - name: Preparar Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-
       - name: Extrair projeto
         run: |
           mkdir -p extraido
           unzip -q RPG-Survival-Starter-v0.3.0.zip -d extraido
           POM="$(find extraido -name pom.xml -print -quit)"
-
           if [ -z "$POM" ]; then
-            echo "ERRO: pom.xml não encontrado dentro do ZIP"
+            echo "ERRO: Não encontrei pom.xml dentro do ZIP."
+            echo "Arquivos encontrados:"
+            find extraido -maxdepth 4 -type f | head -80
             exit 1
           fi
-
           echo "PROJECT_DIR=$(dirname "$POM")" >> "$GITHUB_ENV"
+
+      - name: Preparar Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: '**/pom.xml'
 
       - name: Compilar plugin
         run: |
@@ -45,6 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RPG-Survival-JAR
-          path: extraido/**/target/*.jar
+          path: '**/target/*.jar'
           if-no-files-found: error
+          
           
